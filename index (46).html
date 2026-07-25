@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDL Clan | Painel de Moderador</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Rajdhani:wght@500;700;900&display=swap');
+
+    :root {
+      --bg-dark: #0a0a0c;
+      --card-bg: #141418;
+      --card-border: #262630;
+      --accent-white: #ffffff;
+      --accent-gray: #8b8b9e;
+      --text-main: #f0f0f5;
+      --text-muted: #717182;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(#22222d 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text-main);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container { width: 100%; max-width: 780px; }
+
+    .header-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+
+    .logo-admin {
+      height: 45px;
+      width: 45px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 12px;
+      border: 2px solid var(--accent-white);
+    }
+
+    h1 {
+      font-family: 'Permanent Marker', cursive;
+      margin: 0;
+      font-size: 24px;
+      color: var(--accent-white);
+      display: flex;
+      align-items: center;
+      letter-spacing: 1px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-refresh {
+      background: var(--accent-white);
+      color: #0a0a0c;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-refresh:hover {
+      background: #e0e0e0;
+      transform: scale(1.02);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #ff4d4d;
+      border: 1px solid #ff4d4d;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-danger:hover {
+      background: #ff4d4d;
+      color: white;
+    }
+
+    /* Accordion Candidates */
+    .card-candidate {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .card-candidate:hover { border-color: #3b3b4a; }
+
+    .candidate-header {
+      padding: 18px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .candidate-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: #ffffff;
+    }
+
+    .candidate-tag {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--accent-white);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .candidate-body {
+      display: none;
+      padding: 22px;
+      background: #0f0f12;
+      border-top: 1px solid var(--card-border);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .field-group {
+      margin-bottom: 12px;
+      border-bottom: 1px dashed #202028;
+      padding-bottom: 10px;
+    }
+
+    .field-label {
+      color: var(--accent-gray);
+      font-weight: 700;
+      display: block;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .field-value {
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 500;
+      white-space: pre-line;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-muted);
+      background: var(--card-bg);
+      border-radius: 10px;
+      border: 1px dashed var(--card-border);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-panel">
+      <div>
+        <h1>
+          <img src="Captura de tela 2026-07-24 204904.png" alt="SDL" class="logo-admin"> 
+          MODERAÇÃO STAFF SDL
+        </h1>
+        <small style="color: var(--accent-gray);">Avaliação de Formulários do Clã</small>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-refresh" onclick="carregarCandidaturas()">🔄 Atualizar</button>
+        <button class="btn-danger" onclick="limparTudo()">Limpar Lista</button>
+      </div>
+    </div>
+
+    <div id="listaCandidaturas"></div>
+  </div>
+
+  <script>
+    function carregarCandidaturas() {
+      const container = document.getElementById('listaCandidaturas');
+      const candidaturas = JSON.parse(localStorage.getItem('candidaturasSDL') || '[]');
+
+      if (candidaturas.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>Nenhuma candidatura recebida ainda</h3>
+            <p>Os formulários preenchidos no site aparecerão aqui.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+
+      candidaturas.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'card-candidate';
+        card.innerHTML = `
+          <div class="candidate-header" onclick="toggleDetails(${index})">
+            <span class="candidate-title">🎮 Candidatura de: ${escapeHtml(item.nome)} (@${escapeHtml(item.discord)})</span>
+            <span class="candidate-tag">${escapeHtml(item.cargoDesejado)}</span>
+          </div>
+          <div class="candidate-body" id="detalhes-${index}">
+            <div class="field-group">
+              <span class="field-label">1. Nome Completo:</span>
+              <span class="field-value">${escapeHtml(item.nome)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">2. Discord:</span>
+              <span class="field-value">${escapeHtml(item.discord)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">3. Idade:</span>
+              <span class="field-value">${escapeHtml(item.idade)} anos</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">4. Fuso Horário / País:</span>
+              <span class="field-value">${escapeHtml(item.fuso)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">5. Tempo no Clã SDL:</span>
+              <span class="field-value">${escapeHtml(item.tempoSdl)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">6. Experiência Anterior em Staff:</span>
+              <span class="field-value">${escapeHtml(item.expAnterior)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">7. Motivo para entrar na Staff:</span>
+              <span class="field-value">${escapeHtml(item.motivo)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">8. O que faz dele um bom Staff:</span>
+              <span class="field-value">${escapeHtml(item.qualidades)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">9. Como lidaria com desrespeito às regras:</span>
+              <span class="field-value">${escapeHtml(item.lidarRegras)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">10. Tempo diário disponível:</span>
+              <span class="field-value">${escapeHtml(item.tempoDisponivel)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">11. Mantém a calma em discussões?</span>
+              <span class="field-value">${escapeHtml(item.manterCalma)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">12. Trabalho em equipe:</span>
+              <span class="field-value">${escapeHtml(item.trabalhoEquipe)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">13. Cargo Desejado:</span>
+              <span class="field-value">${escapeHtml(item.cargoDesejado)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">14. Conhece bem as regras?</span>
+              <span class="field-value">${escapeHtml(item.conheceRegras)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">15. Imparcialidade com amigos:</span>
+              <span class="field-value">${escapeHtml(item.puniuAmigo)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">16. Aceita decisões superiores?</span>
+              <span class="field-value">${escapeHtml(item.aceitaDecisoes)}</span>
+            </div>
+            <div class="field-group">
+              <span class="field-label">17. Habilidades extras:</span>
+              <span class="field-value">${escapeHtml(item.habilidades)}</span>
+            </div>
+            <div class="field-group" style="border:none;">
+              <span class="field-label">Data de Envio:</span>
+              <span class="field-value" style="color: var(--accent-gray); font-size: 14px;">${item.data}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleDetails(index) {
+      const el = document.getElementById(`detalhes-${index}`);
+      const isOpen = el.style.display === 'block';
+      el.style.display = isOpen ? 'none' : 'block';
+    }
+
+    function limparTudo() {
+      if (confirm('Tem certeza que deseja apagar todas as candidaturas da lista?')) {
+        localStorage.removeItem('candidaturasSDL');
+        carregarCandidaturas();
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text || '';
+      return div.innerHTML;
+    }
+
+    carregarCandidaturas();
+  </script>
+
+</body>
+</html>
